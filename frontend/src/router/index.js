@@ -1,120 +1,46 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { nextTick } from 'vue';
-import HomeView from '../pages/HomePage.vue';
-import inquiryRoutes from './inquiry';
-import noticeRoutes from './notice';
-import authRoutes from './auth';
+import HomePage from '@/pages/HomePage.vue';
 import { userAuthStore } from '@/stores/auth';
 
-const isAuthenticated = (to, from, next) => {
-  const authStore = userAuthStore();
-
-  if (authStore.isLogin) {
-    next();
-  } else {
-    alert('로그인이 필요합니다.');
-    next('/auth/login');
-  }
-};
+// 모듈 라우트 import
+import authRoutes from './modules/auth';
+import userRoutes from './modules/user';
+import goalsRoutes from './modules/goals';
+import inquiryRoutes from './modules/inquiry';
+import noticeRoutes from './modules/notice';
+import productRoutes from './modules/product';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // 공통 페이지
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'Home',
+      component: HomePage,
+      meta: { layout: 'default' },
     },
     {
       path: '/terms',
       name: 'TermsPage',
       component: () => import('@/pages/term/TermsPage.vue'),
-    },
-    {
-      path: '/user',
-      name: 'UserPage',
-      component: () => import('@/pages/mypage/UserPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/user/point',
-      name: 'PointPage',
-      component: () => import('@/pages/mypage/PointPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/user/asset',
-      name: 'UserAssetEditPage',
-      component: () => import('@/pages/mypage/UserAssetEditPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/user/mbti',
-      name: 'UserMbtiEditPage',
-      component: () => import('@/pages/mypage/UserMbtiEditPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/user/password',
-      name: 'UserPasswordEditPage',
-      component: () => import('@/pages/mypage/UserPasswordEditPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/user/withdraw',
-      name: 'UserWithdrawPage',
-      component: () => import('@/pages/mypage/UserWithdrawPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/goals',
-      name: 'GoalPage',
-      component: () => import('@/pages/goal/GoalPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/goals/:goalId',
-      name: 'GoalDetailPage',
-      component: () => import('@/pages/goal/GoalDetailPage.vue'),
-      props: true,
-    },
-    {
-      path: '/goals/create',
-      name: 'GoalCreatePage',
-      component: () => import('@/pages/goal/GoalCreatePage.vue'),
-    },
-    {
-      path: '/goals/edit/:goalId',
-      name: 'GoalEditPage',
-      component: () => import('@/pages/goal/GoalEditPage.vue'),
-      props: true,
+      meta: { layout: 'default' },
     },
     {
       path: '/find-password',
       name: 'FindPasswordPage',
       component: () => import('@/pages/auth/FindPasswordPage.vue'),
+      meta: { layout: 'default' },
     },
-    {
-      path: '/tax-management',
-      name: 'TaxPage',
-      component: () => import('@/pages/tax/TaxPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/product',
-      name: 'ProductRecommendPage',
-      component: () => import('@/pages/product/ProductRecommendPage.vue'),
-      beforeEnter: isAuthenticated,
-    },
-    {
-      path: '/product/:fin_prdt_cd',
-      name: 'ProductDetailPage',
-      component: () => import('@/pages/product/ProductDetailPage.vue'),
-      props: true,
-    },
+
+    // 도메인별 모듈 라우트
     ...authRoutes,
+    ...userRoutes,
+    ...goalsRoutes,
     ...inquiryRoutes,
     ...noticeRoutes,
+    ...productRoutes,
   ],
 
   scrollBehavior(to, from, savedPosition) {
@@ -125,16 +51,32 @@ const router = createRouter({
       return {
         el: to.hash,
         behavior: 'smooth',
-        top: 80 
-      }
+        top: 80,
+      };
     }
     return {
       top: 0,
-      behavior: 'smooth'
-    }
+      behavior: 'smooth',
+    };
+  },
+});
+
+// 전역 가드: 인증 처리
+router.beforeEach((to) => {
+  const authStore = userAuthStore();
+  const isLogin = authStore.isLogin;
+
+  if (to.meta.requiresAuth && !isLogin) {
+    alert('로그인이 필요합니다.');
+
+    return {
+      path: '/auth/login',
+      query: { redirect: to.fullPath },
+    };
   }
 });
 
+// 라우트 변경 후 스크롤 상단으로
 router.afterEach((to, from) => {
   nextTick(() => {
     if (to.path !== from.path) {

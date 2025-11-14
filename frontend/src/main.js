@@ -1,15 +1,17 @@
-import './assets/main.css';
-import 'bootstrap/dist/css/bootstrap.css';
-import 'vue-awesome-paginate/dist/style.css';
+import '@/assets/tailwind.css'; // Tailwind / Global Style
+import '@/assets/main.css'; // 일반 커스텀 CSS
+
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 
 import App from './App.vue';
 import router from './router';
 import VueAwesomePaginate from 'vue-awesome-paginate';
+
 const app = createApp(App);
-app.use(VueAwesomePaginate);
+
 app.use(createPinia());
 app.use(router);
+app.use(VueAwesomePaginate);
 
 app.mount('#app');
